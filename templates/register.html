@@ -1,0 +1,119 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+    <form action="/register" method="post">
+        <div class="mb-3">
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto"  name="fname" placeholder="First Name" type="text">
+            <span></span>
+        </div>
+        <div class="mb-3">
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto"  name="lname" placeholder="Last Name" type="text">
+        </div>
+        <div class="mb-3">
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto"  name="username" placeholder="Username" type="text">
+        </div>
+        <div class="mb-3">
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto"  name="email" placeholder="Email" type="email">
+        </div>
+        <div class="mb-3">
+            <input id = "psw" class="form-control mx-auto w-auto" name="password" placeholder="Password" type="password" onkeyup="checkpassword(this.value)">
+        </div>
+        <div class="d-flex justify-content-center">
+            <ul>
+                <li id="length">Minimum 8 characters</li>
+                <li id="number">At least one number</li>
+                <li id="letter">At least one uppercase letter</li>
+            </ul>
+        </div>
+        <div class="mb-3 text-center">
+            <input id = "rpsw" class="form-control mx-auto w-auto" name="confirmation" placeholder="Retype password" onkeyup = "retype(this.value)" type="password">
+            <span id="match"></span>
+        </div>
+        <div class="container-fluid py-1 text-center">
+            <button class="btn btn-dark" type="submit">Register</button>
+        </div>
+
+    </form>
+    <script>
+        // Declare minimum length variable
+        var length = 8;
+
+        // Declare password object which contains acceptable criterias
+        var mypassword = {
+            length: false,
+            number: false,
+            letter: false
+        };
+
+        var keys = Object.keys(mypassword);
+
+        // Function for checking the password
+        function checkpassword(password){
+
+            // Length of password
+            if (password.trim().length >= 8){
+                mypassword.length = true;
+            }
+            else if (password.trim().length == 0){
+                mypassword.length = false;
+                mypassword.number = false;
+                mypassword.letter = false;
+            }
+            else{
+                mypassword.length = false;
+            }
+
+            // Iterating through password for number
+            password.split("").every(e => {
+                if (!isNaN(e)){
+                    mypassword.number = true;
+                    return false;
+                }
+                else{
+                    mypassword.number = false;
+                    return true;
+                }
+            });
+
+            // Iterating through password for UPPERCASE letter
+            password.split("").every(e => {
+                if ((/[a-zA-Z]/).test(e) && e.toUpperCase() == e){
+                    mypassword.letter = true;
+                    return false;
+                }
+                else
+                {
+                    mypassword.letter = false;
+                    return true;
+                }
+            });
+
+            // Colorize the text
+            keys.forEach( (key, index) =>{
+                if (mypassword[key]){
+                    document.getElementById(key).style.color = "green";
+                }
+                else{
+                    document.getElementById(key).style.color = "red";
+                }
+            });
+        };
+
+        // Function check retyping password
+        function retype(rpassword){
+            var password = document.getElementById("psw").value;
+            if (password == rpassword){
+                document.getElementById("match").innerText = "Password matches";
+                document.getElementById("match").style.color = "green";
+            }
+            else{
+                document.getElementById("match").innerText = "Password does not match";
+                document.getElementById("match").style.color = "red";
+            }
+        }
+    </script>
+{% endblock %}

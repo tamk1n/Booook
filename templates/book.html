@@ -1,0 +1,215 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Book
+{% endblock %}
+
+{% block main %}
+<div class="row" style="box-border: 3px black">
+    <div class="col-sm-4">
+        <img src='{{data["volumeInfo"]["imageLinks"]["thumbnail"]}}'>
+        <div class="btn-group" role="group" aria-label="Basic radio toggle button group" style="margin-top: 10px">
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off">
+            <label class="btn btn-outline-primary" for="btnradio1">None</label>
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off">
+            <label class="btn btn-outline-primary" for="btnradio2">Want to read</label>
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off">
+            <label class="btn btn-outline-primary" for="btnradio3">Currently reading</label>
+            <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off">
+            <label class="btn btn-outline-primary" for="btnradio4">Read</label>
+        </div>
+        <div class="form-group" style="width: 30%">
+            <label for="exampleSelect1" class="form-label mt-4">Rate this book</label>
+            <select class="form-select" id="exampleSelect1">
+              <option value="none">No rating</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+        </div>
+        <div id="yr">
+        {% if rating[0] %}
+            <span id = "yrating">Your rating is {{ rating[0] }}</span>
+        {% endif %}
+        </div>
+    </div>
+
+    <div class="col-sm-8" id="info">
+        <h2>{{data["volumeInfo"]["title"]}}</h2>
+        <span id="book_id" hidden>{{data["id"]}}</span>
+        <h4>{% for author in data["volumeInfo"]["authors"] %}
+                <span><a href="/author?name={{author}}" class="author" style="text-decoration: none; color: black">{{author}}</span></a><br>
+            {% endfor %}
+        </h4>
+        <h7>{% if book_rating %}
+                Rating: {{book_rating}}
+            {% else %}
+                Rating: 0
+            {% endif %}
+        </h7>
+        <p style="color: grey">{{data["volumeInfo"]["description"] | safe }}</p>
+        <div class="card border-dark mb-3" style="max-width: 50rem;">
+            <div class="card-header">Write a review</div>
+            <div class="card-body">
+                <div class="form-group" id="textarea">
+                    <form id="addreview">
+                        <textarea class="form-control" id="exampleTextarea" rows="3" spellcheck="false"></textarea>
+                        <button type="submit" class="btn btn-dark" style="margin-top: 10px">Add review</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <h3>Reviews</h3>
+            {% if reviews %}
+                {% for review in reviews %}
+                    <div class="card border-danger text-white bg-dark mb-3" style="max-width: 50rem;">
+                        <span id="reviewid" hidden>{{review[3]}}</span>
+                        <div class="card-header">
+                            {{review[0]}} said in {{review[1]}}
+                            {% if session["username"] == review[0] %}
+                                <div id="icons" style="float: right">
+                                    <i class="fas fa-trash-alt" style="padding: 2px"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">{{review[2]}}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <span id="noreview" style="color: grey">No review yet.</span>
+            {% endif %}
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll(".author").forEach(author => {
+        author.addEventListener("mouseover", function(){
+            this.style.textDecoration = "underline";
+        });
+    });
+
+    document.querySelectorAll(".author").forEach(author => {
+        author.addEventListener("mouseout", function(){
+            this.style.textDecoration = "none";
+        });
+    });
+
+    var id = `{{data["id"]}}`;
+        //console.log(id);
+        var radios = document.querySelectorAll(".btn-check");
+        var library = `{{library}}`;
+        //console.log(library);
+        for (i = 0; i < radios.length; i++){
+            if (radios[i].nextElementSibling.innerText == library){
+                radios[i].checked = true;
+            }
+            radios[i].addEventListener("click", function(event){
+                console.log(this.nextElementSibling.innerText);
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", `/updatebook`, true);
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                console.log("Here")
+                xhr.onreadystatechange = function () {
+                    console.log("here")
+                    if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200){
+                        console.log("Yes");
+                    }
+                };
+                xhr.send(`reading=${this.nextElementSibling.innerText}&book_id=${document.getElementById("book_id").innerText}`);
+                console.log(xhr);
+                console.log(document.getElementById("book_id").innerText);
+            })
+        }
+
+        document.querySelector("select").addEventListener("change", function(event){
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", `/updaterating`, true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200){
+                    var rating = JSON.parse(xhr.responseText);
+                    if (rating.rating == "none"){
+                        document.getElementById("yrating").style.display = "none";
+                    }
+                    else{
+                        document.getElementById("yr").innerHTML = `<span id = "yrating">Your rating is ${rating.rating}</span>`;
+                    }
+                    console.log(rating.ave_rating)
+                    if (rating.ave_rating == null){
+                        console.log("here in ave rating")
+                        document.querySelector("h7").innerHTML = "Rating: 0";
+                    }
+                    else{
+                        document.querySelector("h7").innerHTML = `Rating: ${rating.ave_rating}`;
+                    }
+
+                }
+            };
+            xhr.send(`rating=${this.value}&book_id=${document.getElementById("book_id").innerText}`);
+        });
+
+        console.log("before review");
+        document.getElementById("addreview").addEventListener("submit", function(event){
+            event.preventDefault();
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", `/addreview`, true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200){
+                    var review = JSON.parse(xhr.responseText);
+                    if (review.reviewed){
+                        alert("You have written a review to this book. Try another book!")
+                        //var reviewedWarning = document.createElement("span");
+                        //reviewedWarning.innerHTML = "You have already reviewed!";
+                        //document.getElementById("textarea").appendChild(reviewedWarning);
+
+                        //console.log(reviewedWarning)
+                    }
+                    else{
+                        var reviewElement = document.createElement("div");
+                        if (document.querySelector("h3").nextElementSibling.nodeName !== "DIV"){
+                            document.getElementById("noreview").style.display = "none";
+                        }
+                        reviewElement.innerHTML = `<div class="card text-white bg-dark mb-3" style="max-width: 50rem;">
+                                                        <span id="reviewid" hidden>${review.id}</span>
+                                                        <div class="card-header">${review.username} said in ${review.date}
+
+                                                            <div id="icons" style="float: right">
+                                                                <i class="fas fa-trash-alt" style="padding: 2px"></i>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <p class="card-text">${review.review}</p>
+                                                        </div>
+                                                    </div>`
+                        document.getElementById("info").appendChild(reviewElement);
+                    }
+
+                }
+            };
+            console.log(document.querySelector("textarea").value)
+            xhr.send(`review=${document.querySelector("textarea").value}&book_id=${document.getElementById("book_id").innerText}`)
+        });
+
+        console.log("hereout");
+        document.getElementById("info").addEventListener("click", function(event){
+        if (event.target.classList.contains("fas", "fa-trash-alt")) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", `/deletereview`, true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200){
+                event.target.parentNode.parentNode.parentNode.remove();
+            }
+        };
+        xhr.send(`review=${event.target.parentNode.parentNode.nextElementSibling.childNodes[1].innerText}&id=${event.target.parentNode.parentNode.previousElementSibling.innerText}`);
+    }
+});
+
+
+</script>
+{% endblock %}

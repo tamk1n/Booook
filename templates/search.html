@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+{% block title %}
+Search
+{% endblock %}
+{% block main %}
+  {% if data["totalItems"] %}
+    <table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Image</th>
+      <th scope="col">Title</th>
+      <th scope="col">Authors</th>
+      <th scope="col">Publisher</th>
+      <th scope="col">Date</th>
+      <th scope="col">Page</th>
+      <th scope="col">Categories</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in data["items"] %}
+      <tr>
+        <td>
+          {% if "imageLinks" in item["volumeInfo"] %}
+            <img src="{{item['volumeInfo']['imageLinks']['thumbnail']}}">
+          {% endif %}
+        </td>
+        <td><a href="/book?id={{item['id']}}">{{item["volumeInfo"]["title"]}}</a></td>
+
+        {% if "authors" in item["volumeInfo"] %}
+          <td>
+          {% for author in item["volumeInfo"]["authors"] %}
+          <span><a href="/author?name={{author}}" class="author" style="text-decoration: none; color: black">{{author}}</span></a><br>
+          {% endfor %}
+          </td>
+        {% else %}
+          <td> - </td>
+        {% endif %}
+
+        {% if "publisher" in item["volumeInfo"] %}
+          <td>{{item["volumeInfo"]["publisher"]}}</td>
+        {% else %}
+          <td> - </td>
+        {% endif %}
+
+        {% if "publishedDate" in item["volumeInfo"] %}
+          <td>{{item["volumeInfo"]["publishedDate"]}}</td>
+        {% else %}
+          <td> - </td>
+        {% endif %}
+
+        {% if "pageCount" in item["volumeInfo"] %}
+          <td>{{item["volumeInfo"]["pageCount"]}}</td>
+        {% else %}
+          <td> - </td>
+        {% endif %}
+
+        {% if "categories" in item["volumeInfo"] %}
+          <td>
+            {% for category in item["volumeInfo"]["categories"] %}
+            <span><a href="/subject?name={{category}}" class="subject" style="text-decoration: none; color: black">{{category}}</span></a><br>
+            {% endfor %}
+          </td>
+        {% else %}
+        <td> - </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+    <script>
+      document.querySelectorAll(".author").forEach(author => {
+        author.addEventListener("mouseover", function(){
+            this.style.textDecoration = "underline";
+        });
+    });
+
+    document.querySelectorAll(".author").forEach(author => {
+        author.addEventListener("mouseout", function(){
+            this.style.textDecoration = "none";
+        });
+    });
+    </script>
+  </tbody>
+</table>
+{% else %}
+<h1 style="text-align: center;"> No book found based on your search</h1>
+{% endif %}
+{% endblock %}

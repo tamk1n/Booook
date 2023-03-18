@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block title %}
+    {{session["username"]}}
+{% endblock %}
+
+{% block main %}
+<h1 style="margin-bottom: 30px">User Information:</h1>
+<div class="row" style="box-border: 3px black">
+    <div class="col-sm-4">
+        <div class="card">
+            <div class="card-body">
+              <h4 class="card-title">{{user_info[1]}} {{user_info[2]}}</h4>
+              <h6 class="card-subtitle mb-2 text-muted">@{{user_info[3]}}</h6>
+              <p class="card-text">Email: {{user_info[4]}}</p>
+              <p class="card-text">Go to your bookshelf</p>
+              {% for lib in session["libs"] %}
+                <form method="get" action="/library/{{lib[0]}}" style="display: inline-block">
+                    <button type="submit" class="btn btn-warning">{{lib[0]}}</button>
+                </form>
+              {% endfor %}
+            </div>
+          </div>
+    </div>
+    <div class="col-sm-8" id="info">
+      <div class="card text-white bg-secondary mb-3" style="max-width: 25rem;">
+        <div class="card-header"><h5>Your bookshelf</h5></div>
+        <div class="card-body">
+          <p class="card-text">You have <strong>{{shelf["Want to read"]}}</strong>
+            {% if shelf["Want to read"] > 1  %}
+              books
+            {% else %}
+              book
+            {% endif %}
+            that you want to read.</p>
+          <p class="card-text">You have <strong>{{shelf["Currently reading"]}}</strong>
+            {% if shelf["Currently reading"] > 1  %}
+              books
+            {% else %}
+              book
+            {% endif %}
+              that you are currently reading.</p>
+          <p class="card-text">You have <strong>{{shelf["Read"]}}</strong>
+            {% if shelf["Read"] > 1  %}
+              books
+            {% else %}
+              book
+            {% endif %}
+            that you have already read.</p>
+          <p class="card-text">You have rated <strong>{{rating}}</strong>
+            {% if rating > 1 %}
+              books.
+            {% else %}
+              book.
+            {% endif %}</p>
+          <p class="card-text">You have given review to <strong>{{review}}</strong>
+            {% if review > 1 %}
+              books.
+            {% else %}
+              book.
+            {% endif %}</p>
+
+        </div>
+      </div>
+    </div>
+{% endblock %}

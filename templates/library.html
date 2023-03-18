@@ -1,0 +1,99 @@
+{% extends "layout.html" %}
+
+{% block title %}{{Lib}}{% endblock %}
+
+{% block main %}
+<h1>{{lib}}</h1>
+{% if count > 1 %}
+  <span class="badge bg-dark">{{count}} books</span>
+{% elif count == 1 %}
+  <span>{{count}} book</span>
+{% else %}
+  <span>No book</span>
+{%endif%}
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Image</th>
+      <th scope="col">Title</th>
+      <th scope="col">Authors</th>
+      <th scope="col">Publisher</th>
+      <th scope="col">Date</th>
+      <th scope="col">Page</th>
+      <th scope="col">Categories</th>
+      <th scope="col">Rating</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in detail %}
+      <tr>
+        <td>
+          {% if "imageLinks" in item['volumeInfo'] %}
+            <img src="{{item['volumeInfo']['imageLinks']['thumbnail']}}">
+          {% endif %}
+        </td>
+        <td><a href="/book?id={{item['id']}}">{{item['volumeInfo']["title"]}}</a></td>
+
+        {% if "authors" in item['volumeInfo'] %}
+          <td>
+          {% for author in item['volumeInfo']["authors"] %}
+            <span><a href="/author?name={{author}}" class="author" style="text-decoration: none; color: black">{{author}}</span></a><br>
+          {% endfor %}
+          </td>
+        {% else %}
+          <td> - </td>
+        {% endif %}
+
+        {% if "publisher" in item['volumeInfo'] %}
+          <td>{{item['volumeInfo']["publisher"]}}</td>
+        {% else %}
+          <td> - </td>
+        {% endif %}
+
+        {% if "publishedDate" in item['volumeInfo'] %}
+          <td>{{item['volumeInfo']["publishedDate"]}}</td>
+        {% else %}
+          <td> - </td>
+        {% endif %}
+
+        {% if "pageCount" in item['volumeInfo'] %}
+          <td>{{item['volumeInfo']["pageCount"]}}</td>
+        {% else %}
+          <td> - </td>
+        {% endif %}
+
+        {% if "categories" in item['volumeInfo'] %}
+          <td>
+            {% for category in item['volumeInfo']["categories"] %}
+            <span><a href="/subject?name={{category}}" class="subject" style="text-decoration: none; color: black">{{category}}</span></a><br><span>{{category}}</span>
+            {% endfor %}
+          </td>
+        {% else %}
+        <td> - </td>
+        {% endif %}
+        <td>{% if item['volumeInfo']["averageRating"] %}
+              {{item['volumeInfo']["averageRating"]}}
+            {% else %}
+              0
+            {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+
+  </tbody>
+  <script>
+    document.querySelectorAll(".author").forEach(author => {
+      author.addEventListener("mouseover", function(){
+          this.style.textDecoration = "underline";
+      });
+  });
+
+  document.querySelectorAll(".author").forEach(author => {
+      author.addEventListener("mouseout", function(){
+          this.style.textDecoration = "none";
+      });
+  });
+  </script>
+</table>
+{% endblock %}

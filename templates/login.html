@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block title %} Log in {% endblock %}
+
+{% block main %}
+<form action="/login" method="post">
+    <div class="mb-3">
+        <input autocomplete="off" autofocus class="form-control mx-auto w-auto"  name="username" placeholder="Username" type="text">
+    </div>
+    <div class="mb-3">
+        <input id = "psw" class="form-control mx-auto w-auto" name="password" placeholder="Password" type="password" onkeyup="checkpassword(this.value)">
+    </div>
+    <div class="container-fluid py-1 text-center">
+        <button class="btn btn-dark" type="submit">Log in</button>
+    </div>
+{% endblock%}
