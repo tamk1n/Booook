@@ -471,17 +471,21 @@ def login():
 
         # get all information and check
         username = request.form.get("username")
+        password = request.form.get("password").strip()
         if not username:
             flash("Please, enter username!", "danger")
             return render_template("login.html")
-
-        password = request.form.get("password").strip()
-        user = db.execute("SELECT username, hash, id FROM users WHERE username = ?", (username.strip(),))
-        result = user.fetchone()
         if not password:
             flash("Please, enter password!", "danger")
             return render_template("login.html")
-        elif not result or not pbkdf2_sha256.verify(password.strip(), result[1]) or result[0] != username.strip():
+        try:
+            user = db.execute("SELECT username, hash, id FROM users WHERE username = ?", (username.strip(),))
+            result = user.fetchone()
+        except:
+            flash("Wrong username!", "danger")
+            return render_template("login.html")
+        
+        if not result or not pbkdf2_sha256.verify(password.strip(), result[1]) or result[0] != username.strip():
             flash("Wrong username/password!", "danger")
             return render_template("login.html")
 
