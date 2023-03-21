@@ -209,6 +209,7 @@ def book():
     # id of book got from url or via post
     if request.method == "GET":
         book_id = request.args.get("id")
+        print(f"book_id: {book_id}")
     if request.method == "POST":
         book_id = request.form.get("book_id")
 
@@ -382,10 +383,9 @@ def rating():
             db.execute("UPDATE book SET rating = ? WHERE book_id = ? AND user_id = ?", (rating, book_id, session["user_id"]))
         else:
             db.execute("INSERT INTO book (user_id, book_id, rating) VALUES (?, ?, ?)", (session["user_id"], book_id, rating))
-    if request.method == 'GET':
-        rating = db.execute("SELECT rating FROM book WHERE book_id = ? AND user_id = ?", (book_id, session["user_id"])).fetchone()
-        print(f"book_id: {book_id}")
-        print(f"rating: {rating}")
+    rating = db.execute("SELECT rating FROM book WHERE book_id = ? AND user_id = ?", (book_id, session["user_id"])).fetchone()
+    print(f"book_id: {book_id}")
+    print(f"rating: {rating}")
 
     # average rating
     ave_rating = db.execute("SELECT AVG(rating) FROM book WHERE book_id = ?", (book_id,)).fetchone()[0]
