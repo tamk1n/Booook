@@ -214,10 +214,16 @@ def book():
 
     # url, convert to json
     url = f"https://www.googleapis.com/books/v1/volumes/{book_id}"
-    print(url)
+    #print(url)
     response = requests.get(url)
-    data = response.json()
+    
+    if response.status_code == 200:
+        pass
+    else:
+        message = "No book found!"
+        return render_template("error.html", message=message)
 
+    data = response.json()
     # database connection
     connection = sqlite3.connect("booook.db")
     db = connection.cursor()
