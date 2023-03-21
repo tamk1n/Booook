@@ -30,9 +30,7 @@
             </select>
         </div>
         <div id="yr">
-        {% if rating[0] %}
-            <span id = "yrating">Your rating is {{ rating[0] }}</span>
-        {% endif %}
+            <span id = "yrating"></span>
         </div>
     </div>
 
@@ -43,12 +41,7 @@
                 <span><a href="/author?name={{author}}" class="author" style="text-decoration: none; color: black">{{author}}</span></a><br>
             {% endfor %}
         </h4>
-        <h7>{% if book_rating %}
-                Rating: {{book_rating}}
-            {% else %}
-                Rating: 0
-            {% endif %}
-        </h7>
+        <h7></h7>
         <p style="color: grey">{{data["volumeInfo"]["description"] | safe }}</p>
         <div class="card border-dark mb-3" style="max-width: 50rem;">
             <div class="card-header">Write a review</div>
@@ -98,59 +91,75 @@
         });
     });
 
-    var id = `{{data["id"]}}`;
-        //console.log(id);
-        var radios = document.querySelectorAll(".btn-check");
-        var library = `{{library}}`;
-        //console.log(library);
-        for (i = 0; i < radios.length; i++){
-            if (radios[i].nextElementSibling.innerText == library){
-                radios[i].checked = true;
-            }
-            radios[i].addEventListener("click", function(event){
-                console.log(this.nextElementSibling.innerText);
-                var xhr = new XMLHttpRequest();
-                xhr.open("POST", `/updatebook`, true);
-                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                console.log("Here")
-                xhr.onreadystatechange = function () {
-                    console.log("here")
-                    if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200){
-                        console.log("Yes");
-                    }
-                };
-                xhr.send(`reading=${this.nextElementSibling.innerText}&book_id=${document.getElementById("book_id").innerText}`);
-                console.log(xhr);
-                console.log(document.getElementById("book_id").innerText);
-            })
+    /* Add the book to library */
+
+    // declare radio elements
+    var radios = document.querySelectorAll(".btn-check");
+    var library = `{{library}}`; // library name from jinja
+    var bookId = document.getElementById('book_id').innerText;
+
+    //iterate through all radio elements
+    radios.forEach(radio => {
+        if (radio.nextElementSibling.innerText == library){
+            radio.checked = true; // specific radio checked
         }
 
-        document.querySelector("select").addEventListener("change", function(event){
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", `/updaterating`, true);
-            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200){
-                    var rating = JSON.parse(xhr.responseText);
-                    if (rating.rating == "none"){
-                        document.getElementById("yrating").style.display = "none";
-                    }
-                    else{
-                        document.getElementById("yr").innerHTML = `<span id = "yrating">Your rating is ${rating.rating}</span>`;
-                    }
-                    console.log(rating.ave_rating)
-                    if (rating.ave_rating == null){
-                        console.log("here in ave rating")
-                        document.querySelector("h7").innerHTML = "Rating: 0";
-                    }
-                    else{
-                        document.querySelector("h7").innerHTML = `Rating: ${rating.ave_rating}`;
-                    }
-
-                }
-            };
-            xhr.send(`rating=${this.value}&book_id=${document.getElementById("book_id").innerText}`);
+        // make each radio listen for click event.
+        radio.addEventListener("click", function(event){
+            // make a async request to server
+            fetch('/updatebook', {
+                method: 'POST',
+                body: JSON.stringify({
+                    reading: this.nextElementSibling.innerText,
+                    book_id: bookId
+                })
+            })
         });
+    });
+
+    /* Rate the book */
+    fetch('/updaterating')
+    .then(response => response.json())
+    .then(result => {
+        var rating = result.rating;
+        console.log(rating);
+        var aveRating = result.ave_rating;
+
+        if (rating){
+            document.getElementById("yrating").style.display = "none";
+        }
+    })
+    document.querySelector("select").addEventListener("change", function(event){
+        console.log("click rating")
+        fetch('/updaterating', {
+            method: 'POST',
+            body: JSON.stringify(
+                {
+                    rating: this.value,
+                    book_id: bookId
+                }
+            )
+        })
+        .then(response => response.json())
+        .then(result => {
+            var rating = result.rating;
+            var aveRating = result.ave_rating;
+
+            if (rating == "none"){
+                document.getElementById("yrating").style.display = "none";
+            }
+            else{
+                document.getElementById("yr").innerHTML = `<span id = "yrating">Your rating is ${rating}</span>`;
+            }
+
+            if (aveRating == null){
+                document.querySelector("h7").innerHTML = "Rating: 0";
+            }
+            else{
+                document.querySelector("h7").innerHTML = `Rating: ${aveRating}`;
+            }
+        })
+    });
 
         console.log("before review");
         document.getElementById("addreview").addEventListener("submit", function(event){
