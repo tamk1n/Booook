@@ -35,7 +35,7 @@ In summary, Booook is an innovative book website that provides users with a pers
 
 - Clone the repository:
 
-    ```git clone https://github.com/your-username/booook.git```
+    ```git clone https://github.com/tamk1n/booook.git```
 
 
 - Install the required dependencies:
