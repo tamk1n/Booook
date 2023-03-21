@@ -1,4 +1,4 @@
-import os
+import os, json
 from flask import Flask, redirect, render_template, request, session, flash, jsonify
 from authentication import requires_auth, libs_nav
 from flask_session import Session
@@ -237,15 +237,13 @@ def book():
     # get user's rating
     # get reviews
     # get average rating of book
-    rating = db.execute("SELECT rating FROM book WHERE book_id = ? AND user_id = ?", (book_id, session["user_id"])).fetchone()
     reviews = db.execute("SELECT username, date, review, comment.id FROM users, comment WHERE users.id = comment.user_id AND book_id = ?", (book_id,)).fetchall()
-    book_rating = db.execute("SELECT AVG(rating) FROM book WHERE book_id = ?", (book_id,)).fetchone()
-    print(book_rating)
+    #book_rating = db.execute("SELECT AVG(rating) FROM book WHERE book_id = ?", (book_id,)).fetchone()
+    """print(book_rating)
     if book_rating[0]:
         book_rating = round(book_rating[0], 1)
     else:
-        book_rating = 0
-
+        book_rating = 0"""
 
     # add user's libraries to session
     session["libs"] = libs_nav()
@@ -254,7 +252,7 @@ def book():
     connection.commit()
     connection.close()
 
-    return render_template("book.html", data = data, library = library, rating = rating, book_rating = book_rating, reviews = reviews, user = session["username"])
+    return render_template("book.html", data = data, library = library, reviews = reviews, user = session["username"])
 
 @app.route("/author")
 def author():
@@ -292,8 +290,11 @@ def update_book():
     if requires_auth():
         return redirect("/login")
     # get reading and book_id
-    reading = request.form.get("reading")
-    book_id = request.form.get("book_id")
+    data = json.loads(request.get_data())
+    reading = data["reading"]
+    book_id = data["book_id"]
+    #reading = request.form.get("reading")
+    #book_id = request.form.get("book_id")
     print(reading)
     print(book_id)
 
@@ -349,32 +350,42 @@ def update_book():
     connection.close()
     return reading
 
+
+
 @app.route("/updaterating", methods=["POST", "GET"])
 def rating():
     # check user logged in
     if requires_auth():
         return redirect("/login")
-
-    # get user's rating and id of book
-    rating = request.form.get("rating")
-    book_id = request.form.get("book_id")
-    print(rating)
-    print(book_id)
-
+    book_id = request.args.get('id')
     # create connection to database
     connection = sqlite3.connect("booook.db")
     db = connection.cursor()
 
-    # check if rating is none
-    # check if book already rated/it must be changed
-    # check if book not rated new data inserted
-    books = db.execute("SELECT book_id, user_id FROM book WHERE book_id = ? AND user_id = ?", (book_id, session["user_id"])).fetchone()
-    if rating == "none":
-        db.execute("DELETE FROM book WHERE book_id = ? AND user_id = ?", (book_id, session["user_id"]))
-    elif books:
-        db.execute("UPDATE book SET rating = ? WHERE book_id = ? AND user_id = ?", (rating, book_id, session["user_id"]))
-    else:
-        db.execute("INSERT INTO book (user_id, book_id, rating) VALUES (?, ?, ?)", (session["user_id"], book_id, rating))
+    if request.method == 'POST':
+        # get user's rating and id of book
+        #rating = request.form.get("rating")
+        #book_id = request.form.get("book_id")
+        data = json.loads(request.get_data())
+        rating = data['rating']
+        book_id = data['book_id']
+        print(rating)
+        print(book_id)
+
+        # check if rating is none
+        # check if book already rated/it must be changed
+        # check if book not rated new data inserted
+        books = db.execute("SELECT book_id, user_id FROM book WHERE book_id = ? AND user_id = ?", (book_id, session["user_id"])).fetchone()
+        if rating == "none":
+            db.execute("DELETE FROM book WHERE book_id = ? AND user_id = ?", (book_id, session["user_id"]))
+        elif books:
+            db.execute("UPDATE book SET rating = ? WHERE book_id = ? AND user_id = ?", (rating, book_id, session["user_id"]))
+        else:
+            db.execute("INSERT INTO book (user_id, book_id, rating) VALUES (?, ?, ?)", (session["user_id"], book_id, rating))
+    if request.method == 'GET':
+        rating = db.execute("SELECT rating FROM book WHERE book_id = ? AND user_id = ?", (book_id, session["user_id"])).fetchone()
+        print(f"book_id: {book_id}")
+        print(f"rating: {rating}")
 
     # average rating
     ave_rating = db.execute("SELECT AVG(rating) FROM book WHERE book_id = ?", (book_id,)).fetchone()[0]
