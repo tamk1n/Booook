@@ -563,9 +563,9 @@ def addreview():
         return redirect("/login")
 
     # get review, username and date
-    review = request.form.get("review")
-    print(review)
-    book_id = request.form.get("book_id")
+    data = json.loads(request.get_data())
+    review = data['review']
+    book_id = data['book_id']
     username = session["username"]
     date = datetime.now().strftime("%d.%m.%Y")
 

@@ -174,50 +174,47 @@
         })
     });
 
-        console.log("before review");
-        document.getElementById("addreview").addEventListener("submit", function(event){
-            event.preventDefault();
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", `/addreview`, true);
-            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200){
-                    var review = JSON.parse(xhr.responseText);
-                    if (review.reviewed){
-                        alert("You have written a review to this book. Try another book!")
-                        //var reviewedWarning = document.createElement("span");
-                        //reviewedWarning.innerHTML = "You have already reviewed!";
-                        //document.getElementById("textarea").appendChild(reviewedWarning);
 
-                        //console.log(reviewedWarning)
-                    }
-                    else{
-                        var reviewElement = document.createElement("div");
-                        if (document.querySelector("h3").nextElementSibling.nodeName !== "DIV"){
-                            document.getElementById("noreview").style.display = "none";
-                        }
-                        reviewElement.innerHTML = `<div class="card text-white bg-dark mb-3" style="max-width: 50rem;">
-                                                        <span id="reviewid" hidden>${review.id}</span>
-                                                        <div class="card-header">${review.username} said in ${review.date}
-
-                                                            <div id="icons" style="float: right">
-                                                                <i class="fas fa-trash-alt" style="padding: 2px"></i>
-                                                            </div>
-                                                        </div>
-                                                        <div class="card-body">
-                                                            <p class="card-text">${review.review}</p>
-                                                        </div>
-                                                    </div>`
-                        document.getElementById("info").appendChild(reviewElement);
-                    }
-
+    /* Add a review */
+    document.getElementById('addreview').addEventListener('submit', function(event){
+        console.log('review');
+        event.preventDefault();
+        fetch('/addreview', {
+            method: 'POST',
+            body: JSON.stringify(
+                {
+                    review: document.querySelector("textarea").value,
+                    book_id: bookId
                 }
-            };
-            console.log(document.querySelector("textarea").value)
-            xhr.send(`review=${document.querySelector("textarea").value}&book_id=${document.getElementById("book_id").innerText}`)
-        });
+            )
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.reviewed){
+                alert("You have written a review to this book. Try another book!");
+            }
+            else{
+                var reviewElement = document.createElement("div");
+                if (document.querySelector("h3").nextElementSibling.nodeName !== "DIV"){
+                    document.getElementById("noreview").style.display = "none";
+                }
+                reviewElement.innerHTML = `<div class="card text-white bg-dark mb-3" style="max-width: 50rem;">
+                                                <span id="reviewid" hidden>${result.id}</span>
+                                                <div class="card-header">${result.username} said in ${result.date}
+                                                    <div id="icons" style="float: right">
+                                                        <i class="fas fa-trash-alt" style="padding: 2px"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="card-body">
+                                                    <p class="card-text">${result.review}</p>
+                                                </div>
+                                            </div>`
+                document.getElementById("info").appendChild(reviewElement);
+            }
+        })
+    });
 
-        console.log("hereout");
+       /* console.log("hereout");
         document.getElementById("info").addEventListener("click", function(event){
         if (event.target.classList.contains("fas", "fa-trash-alt")) {
         var xhr = new XMLHttpRequest();
@@ -229,8 +226,8 @@
             }
         };
         xhr.send(`review=${event.target.parentNode.parentNode.nextElementSibling.childNodes[1].innerText}&id=${event.target.parentNode.parentNode.previousElementSibling.innerText}`);
-    }
-});
+    } 
+}); */
 
 
 </script>
