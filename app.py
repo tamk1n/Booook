@@ -581,6 +581,7 @@ def addreview():
         connection.commit()
         connection.close()
         return jsonify({"reviewed": True})
+    
 
     # if not reviewed yet insert data to database
     db.execute("INSERT INTO comment (user_id, book_id, review, date) VALUES (?, ?, ?, ?)", (session["user_id"], book_id, review, date))
@@ -588,9 +589,10 @@ def addreview():
     id = db.execute("SELECT id FROM comment WHERE user_id = ?", (session["user_id"],)).fetchone()[0]
 
     connection.commit()
+
     connection.close()
 
-    return jsonify({"username": username, "review": review, "date": date, "id": id, "reviewed": False})
+    return jsonify({"username": username, 'review': review, "date": date, "id": id, "reviewed": False})
 
 @app.route("/deletereview", methods=["GET", "POST"])
 def deletereview():
@@ -598,7 +600,11 @@ def deletereview():
     if requires_auth():
         return redirect("/login")
     # get comment id and delete from database
-    id = request.form.get("id")
+    #id = request.form.get("id")
+    data = json.loads(request.get_data())
+    id = data['id']
+    print(f"id: {id}")
+    book_id = data['book_id']
     print(id)
     connection = sqlite3.connect("booook.db")
     db = connection.cursor()
@@ -606,6 +612,8 @@ def deletereview():
     db.execute("DELETE FROM comment WHERE id = ?", (id, ))
 
     connection.commit()
+
+    count = db.execute("SELECT COUNT(review) FROM comment WHERE book_id = ?", (book_id, )).fetchone()[0]
     connection.close()
 
-    return id
+    return jsonify({'count': count})

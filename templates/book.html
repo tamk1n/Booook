@@ -54,10 +54,13 @@
                 </div>
             </div>
         </div>
-        <h3>Reviews</h3>
+        <div id='reviewTitle'>
+            <h3>Reviews</h3>
+        </div>
+        <div id='reviews'>
             {% if reviews %}
                 {% for review in reviews %}
-                    <div class="card border-danger text-white bg-dark mb-3" style="max-width: 50rem;">
+                    <div class="card text-white bg-dark mb-3" style="max-width: 50rem;" id="comment">
                         <span id="reviewid" hidden>{{review[3]}}</span>
                         <div class="card-header">
                             {{review[0]}} said in {{review[1]}}
@@ -71,10 +74,9 @@
                             <p class="card-text">{{review[2]}}</p>
                         </div>
                     </div>
-                {% endfor %}
-            {% else %}
-                <span id="noreview" style="color: grey">No review yet.</span>
+                {% endfor %}   
             {% endif %}
+        </div>
     </div>
 </div>
 
@@ -175,6 +177,12 @@
     });
 
 
+    // Check if the book has review.
+    let reviewElement = document.getElementById('reviews');
+    if(!reviewElement.querySelector('#comment')){
+        reviewElement.innerHTML = '<span id="noreview" style="color: grey">No review yet.</span>';
+    }
+
     /* Add a review */
     document.getElementById('addreview').addEventListener('submit', function(event){
         console.log('review');
@@ -194,11 +202,17 @@
                 alert("You have written a review to this book. Try another book!");
             }
             else{
-                var reviewElement = document.createElement("div");
-                if (document.querySelector("h3").nextElementSibling.nodeName !== "DIV"){
+                let reviewElement = document.getElementById('reviews');
+
+                // check if the book has a review
+                if(!reviewElement.querySelector('#comment')){
+                    reviewElement.innerHTML = '<span id="noreview" style="color: grey">No review yet.</span>';
+                } else {
                     document.getElementById("noreview").style.display = "none";
                 }
-                reviewElement.innerHTML = `<div class="card text-white bg-dark mb-3" style="max-width: 50rem;">
+
+                //document.getElementById("noreview").style.display = "none";       
+                reviewElement.innerHTML += `<div class="card text-white bg-dark mb-3" style="max-width: 50rem;">
                                                 <span id="reviewid" hidden>${result.id}</span>
                                                 <div class="card-header">${result.username} said in ${result.date}
                                                     <div id="icons" style="float: right">
@@ -208,27 +222,40 @@
                                                 <div class="card-body">
                                                     <p class="card-text">${result.review}</p>
                                                 </div>
-                                            </div>`
-                document.getElementById("info").appendChild(reviewElement);
+                                            </div>`;
             }
         })
     });
 
-       /* console.log("hereout");
-        document.getElementById("info").addEventListener("click", function(event){
-        if (event.target.classList.contains("fas", "fa-trash-alt")) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", `/deletereview`, true);
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200){
-                event.target.parentNode.parentNode.parentNode.remove();
-            }
-        };
-        xhr.send(`review=${event.target.parentNode.parentNode.nextElementSibling.childNodes[1].innerText}&id=${event.target.parentNode.parentNode.previousElementSibling.innerText}`);
-    } 
-}); */
 
+    /*  Delete the review  */
+    document.getElementById("info").addEventListener("click", function(event){
+        if (event.target.classList.contains("fas", "fa-trash-alt")){
+            fetch('/deletereview', {
+                method: 'POST',
+                body: JSON.stringify(
+                    {
+                        id: event.target.parentNode.parentNode.previousElementSibling.innerText,
+                        book_id: bookId
+                    }
+                )
+            })
+            .then(response => response.json())
+            .then(result => {
+                // removing specific comment
+                event.target.parentNode.parentNode.parentNode.remove();
+
+                // check if the book has a review
+                let reviewElement = document.getElementById('reviews');
+                if(!reviewElement.querySelector('#comment')){
+                    reviewElement.innerHTML = '<span id="noreview" style="color: grey">No review yet.</span>';
+                } 
+                else {
+                    document.getElementById("noreview").style.display = "none";
+                }
+            })
+        }
+    });
 
 </script>
 {% endblock %}
