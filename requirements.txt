@@ -3,5 +3,4 @@ Flask-Session
 requests
 datetime
 Mail
-Message
 passlib.hash
