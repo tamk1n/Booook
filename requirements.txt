@@ -3,4 +3,4 @@ Flask-Session
 requests
 datetime
 Mail
-passlib.hash
+passlib[bcrypt]
