@@ -50,7 +50,7 @@ def user():
     user = request.args.get("id")
 
     # database connection start
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     # if user exists, all of information got from database
@@ -115,7 +115,7 @@ def challenge():
         return redirect("/login")
 
     #database connection
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     # check for any challenge exist
@@ -172,7 +172,7 @@ def challenged():
         return redirect("/login")
 
     # create database connection
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     # get challenge name from input and check if it exist
@@ -226,7 +226,7 @@ def book():
 
     data = response.json()
     # database connection
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     # get library if have any
@@ -300,7 +300,7 @@ def update_book():
     print(book_id)
 
     # create database connection
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     # get id of library based on its name and user
@@ -360,7 +360,7 @@ def rating():
         return redirect("/login")
     book_id = request.args.get('id')
     # create connection to database
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     if request.method == 'POST':
@@ -407,7 +407,7 @@ def register():
     if request.method == "POST":
 
         # Connection to database
-        connection = sqlite3.connect("booook.db")
+        connection = sqlite3.connect("/home/tamkin/Booook")
 
         db = connection.cursor()
         # Get and check first name
@@ -424,6 +424,7 @@ def register():
 
         # Get and check username exist
         username = request.form.get("username").strip()
+
         user = db.execute("SELECT COUNT(username) FROM users WHERE username = ?", (username,))
         result = user.fetchone()[0]
         if not username:
@@ -480,7 +481,7 @@ def register():
 def login():
     if request.method == "POST":
         # create database connection
-        connection = sqlite3.connect("booook.db")
+        connection = sqlite3.connect("/home/tamkin/Booook")
         db = connection.cursor()
 
         # if any session clear
@@ -538,7 +539,7 @@ def library(lib):
         return redirect("/login")
 
     # create connection to database
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     # get books based on id of book and library and convert to JSON
@@ -572,7 +573,7 @@ def addreview():
     print(f"Review for this book is {review}")
 
     # create connection to database
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     # check if user already reviewed the book
@@ -606,7 +607,7 @@ def deletereview():
     print(f"id: {id}")
     book_id = data['book_id']
     print(id)
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     db.execute("DELETE FROM comment WHERE id = ?", (id, ))
