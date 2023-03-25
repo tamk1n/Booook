@@ -156,15 +156,21 @@
         })
         .then(response => response.json())
         .then(result => {
-            console.log(result)
+            console.log(result.rating)
             var rating = result.rating;
             var aveRating = result.ave_rating;
 
-            if (rating == "none"){
+            if (rating == "none" || !rating){
+                console.log('none');
                 document.getElementById("yrating").style.display = "none";
             }
-            else{
+            else if (rating !== null){
+                console.log('rating');
+                document.getElementById("yrating").style.display = "block";
                 document.getElementById("yrating").innerHTML = `Your rating is ${rating}`;
+            }
+            else{
+
             }
 
             if (aveRating == null){
