@@ -1,4 +1,4 @@
-import os
+import os, json
 from flask import Flask, redirect, render_template, request, session, flash, jsonify
 from authentication import requires_auth, libs_nav
 from flask_session import Session
@@ -50,7 +50,7 @@ def user():
     user = request.args.get("id")
 
     # database connection start
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     # if user exists, all of information got from database
@@ -115,7 +115,7 @@ def challenge():
         return redirect("/login")
 
     #database connection
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     # check for any challenge exist
@@ -172,7 +172,7 @@ def challenged():
         return redirect("/login")
 
     # create database connection
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     # get challenge name from input and check if it exist
@@ -209,6 +209,7 @@ def book():
     # id of book got from url or via post
     if request.method == "GET":
         book_id = request.args.get("id")
+        print(f"book_id: {book_id}")
     if request.method == "POST":
         book_id = request.form.get("book_id")
 
@@ -225,7 +226,7 @@ def book():
 
     data = response.json()
     # database connection
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     # get library if have any
@@ -237,15 +238,13 @@ def book():
     # get user's rating
     # get reviews
     # get average rating of book
-    rating = db.execute("SELECT rating FROM book WHERE book_id = ? AND user_id = ?", (book_id, session["user_id"])).fetchone()
     reviews = db.execute("SELECT username, date, review, comment.id FROM users, comment WHERE users.id = comment.user_id AND book_id = ?", (book_id,)).fetchall()
-    book_rating = db.execute("SELECT AVG(rating) FROM book WHERE book_id = ?", (book_id,)).fetchone()
-    print(book_rating)
+    #book_rating = db.execute("SELECT AVG(rating) FROM book WHERE book_id = ?", (book_id,)).fetchone()
+    """print(book_rating)
     if book_rating[0]:
         book_rating = round(book_rating[0], 1)
     else:
-        book_rating = 0
-
+        book_rating = 0"""
 
     # add user's libraries to session
     session["libs"] = libs_nav()
@@ -254,7 +253,7 @@ def book():
     connection.commit()
     connection.close()
 
-    return render_template("book.html", data = data, library = library, rating = rating, book_rating = book_rating, reviews = reviews, user = session["username"])
+    return render_template("book.html", data = data, library = library, reviews = reviews, user = session["username"])
 
 @app.route("/author")
 def author():
@@ -292,13 +291,16 @@ def update_book():
     if requires_auth():
         return redirect("/login")
     # get reading and book_id
-    reading = request.form.get("reading")
-    book_id = request.form.get("book_id")
+    data = json.loads(request.get_data())
+    reading = data["reading"]
+    book_id = data["book_id"]
+    #reading = request.form.get("reading")
+    #book_id = request.form.get("book_id")
     print(reading)
     print(book_id)
 
     # create database connection
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     # get id of library based on its name and user
@@ -349,32 +351,41 @@ def update_book():
     connection.close()
     return reading
 
+
+
 @app.route("/updaterating", methods=["POST", "GET"])
 def rating():
     # check user logged in
     if requires_auth():
         return redirect("/login")
-
-    # get user's rating and id of book
-    rating = request.form.get("rating")
-    book_id = request.form.get("book_id")
-    print(rating)
-    print(book_id)
-
+    book_id = request.args.get('id')
     # create connection to database
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
-    # check if rating is none
-    # check if book already rated/it must be changed
-    # check if book not rated new data inserted
-    books = db.execute("SELECT book_id, user_id FROM book WHERE book_id = ? AND user_id = ?", (book_id, session["user_id"])).fetchone()
-    if rating == "none":
-        db.execute("DELETE FROM book WHERE book_id = ? AND user_id = ?", (book_id, session["user_id"]))
-    elif books:
-        db.execute("UPDATE book SET rating = ? WHERE book_id = ? AND user_id = ?", (rating, book_id, session["user_id"]))
-    else:
-        db.execute("INSERT INTO book (user_id, book_id, rating) VALUES (?, ?, ?)", (session["user_id"], book_id, rating))
+    if request.method == 'POST':
+        # get user's rating and id of book
+        #rating = request.form.get("rating")
+        #book_id = request.form.get("book_id")
+        data = json.loads(request.get_data())
+        rating = data['rating']
+        book_id = data['book_id']
+        print(rating)
+        print(book_id)
+
+        # check if rating is none
+        # check if book already rated/it must be changed
+        # check if book not rated new data inserted
+        books = db.execute("SELECT book_id, user_id FROM book WHERE book_id = ? AND user_id = ?", (book_id, session["user_id"])).fetchone()
+        if rating == "none":
+            db.execute("DELETE FROM book WHERE book_id = ? AND user_id = ?", (book_id, session["user_id"]))
+        elif books:
+            db.execute("UPDATE book SET rating = ? WHERE book_id = ? AND user_id = ?", (rating, book_id, session["user_id"]))
+        else:
+            db.execute("INSERT INTO book (user_id, book_id, rating) VALUES (?, ?, ?)", (session["user_id"], book_id, rating))
+    rating = db.execute("SELECT rating FROM book WHERE book_id = ? AND user_id = ?", (book_id, session["user_id"])).fetchone()
+    print(f"book_id: {book_id}")
+    print(f"rating: {rating}")
 
     # average rating
     ave_rating = db.execute("SELECT AVG(rating) FROM book WHERE book_id = ?", (book_id,)).fetchone()[0]
@@ -396,7 +407,7 @@ def register():
     if request.method == "POST":
 
         # Connection to database
-        connection = sqlite3.connect("booook.db")
+        connection = sqlite3.connect("/home/tamkin/Booook")
 
         db = connection.cursor()
         # Get and check first name
@@ -413,6 +424,7 @@ def register():
 
         # Get and check username exist
         username = request.form.get("username").strip()
+
         user = db.execute("SELECT COUNT(username) FROM users WHERE username = ?", (username,))
         result = user.fetchone()[0]
         if not username:
@@ -469,7 +481,7 @@ def register():
 def login():
     if request.method == "POST":
         # create database connection
-        connection = sqlite3.connect("booook.db")
+        connection = sqlite3.connect("/home/tamkin/Booook")
         db = connection.cursor()
 
         # if any session clear
@@ -527,7 +539,7 @@ def library(lib):
         return redirect("/login")
 
     # create connection to database
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     # get books based on id of book and library and convert to JSON
@@ -552,16 +564,16 @@ def addreview():
         return redirect("/login")
 
     # get review, username and date
-    review = request.form.get("review")
-    print(review)
-    book_id = request.form.get("book_id")
+    data = json.loads(request.get_data())
+    review = data['review']
+    book_id = data['book_id']
     username = session["username"]
     date = datetime.now().strftime("%d.%m.%Y")
 
     print(f"Review for this book is {review}")
 
     # create connection to database
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     # check if user already reviewed the book
@@ -570,6 +582,7 @@ def addreview():
         connection.commit()
         connection.close()
         return jsonify({"reviewed": True})
+    
 
     # if not reviewed yet insert data to database
     db.execute("INSERT INTO comment (user_id, book_id, review, date) VALUES (?, ?, ?, ?)", (session["user_id"], book_id, review, date))
@@ -577,9 +590,10 @@ def addreview():
     id = db.execute("SELECT id FROM comment WHERE user_id = ?", (session["user_id"],)).fetchone()[0]
 
     connection.commit()
+
     connection.close()
 
-    return jsonify({"username": username, "review": review, "date": date, "id": id, "reviewed": False})
+    return jsonify({"username": username, 'review': review, "date": date, "id": id, "reviewed": False})
 
 @app.route("/deletereview", methods=["GET", "POST"])
 def deletereview():
@@ -587,14 +601,20 @@ def deletereview():
     if requires_auth():
         return redirect("/login")
     # get comment id and delete from database
-    id = request.form.get("id")
+    #id = request.form.get("id")
+    data = json.loads(request.get_data())
+    id = data['id']
+    print(f"id: {id}")
+    book_id = data['book_id']
     print(id)
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook")
     db = connection.cursor()
 
     db.execute("DELETE FROM comment WHERE id = ?", (id, ))
 
     connection.commit()
+
+    count = db.execute("SELECT COUNT(review) FROM comment WHERE book_id = ?", (book_id, )).fetchone()[0]
     connection.close()
 
-    return id
+    return jsonify({'count': count})
