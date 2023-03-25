@@ -8,7 +8,7 @@ def requires_auth():
     return False
 
 def libs_nav():
-    connection = sqlite3.connect("booook.db")
+    connection = sqlite3.connect("/home/tamkin/Booook/booook.db")
     db = connection.cursor()
     libs = db.execute("SELECT name FROM library WHERE user_id = ?", (session["user_id"], )).fetchall()
     return libs
